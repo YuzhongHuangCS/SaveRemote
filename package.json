@@ -1,8 +1,9 @@
 {
-  "name": "save-scp",
-  "displayName": "save_scp",
-  "description": "Run scp command on document save",
-  "version": "0.0.1",
+  "name": "savescp",
+  "displayName": "SaveSCP",
+  "description": "Run scp command on document saved",
+  "version": "0.0.2",
+  "repository": "https://github.com/YuzhongHuangCS/savescp",
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -10,13 +11,13 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:save-scp.helloWorld"
+    "onCommand:savescp.helloWorld"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "save-scp.helloWorld",
+        "command": "savescp.helloWorld",
         "title": "Hello World"
       }
     ]
