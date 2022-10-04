@@ -28,19 +28,19 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	const HOST = "yuzhongh@discovery1.usc.edu";
-	const SRC = "/c:/Users/yuzho/surface_recon/";
+	const SRC = "c:\\Users\\yuzho\\surface_recon\\";
 	const TGT = "/home1/yuzhongh/surface_recon/";
 
 	vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
 		if (document.uri.scheme === "file") {
-			let filename = document.uri.path;
+			let filename = document.fileName;
 			if (filename.includes(".pyc") || filename.includes(".git") || !filename.includes(SRC)) {
 				return;
 			}
-			let cmd = `scp ${document.fileName} ${HOST}:${filename.replace(SRC, TGT)}`;
+			let cmd = `scp ${filename} ${HOST}:${filename.replace(SRC, TGT)}`;
 			statusBarItem.text = cmd;
 
-			lastMessage = '';
+			lastMessage = cmd;
 			let scp = child_process.spawn(cmd, {shell: true});
 			scp.stdout.on('data', (data) => {
 				lastMessage += data.toString();
