@@ -11,14 +11,14 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:savescp.helloWorld"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "savescp.helloWorld",
-        "title": "Hello World"
+        "command": "savescp.lastMessage",
+        "title": "Last Message"
       }
     ]
   },

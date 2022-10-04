@@ -11,16 +11,21 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "savescp" is now active!');
 
+	let lastMessage = '';
+	let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
+	statusBarItem.text = "Ready";
+	statusBarItem.command = 'savescp.lastMessage';
+	statusBarItem.show();
+	context.subscriptions.push(statusBarItem);
+
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('savescp.helloWorld', () => {
+	context.subscriptions.push(vscode.commands.registerCommand('savescp.lastMessage', () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from SaveSCP!');
-	});
-
-	context.subscriptions.push(disposable);
+		vscode.window.showInformationMessage(lastMessage);
+	}));
 
 	const HOST = "yuzhongh@discovery1.usc.edu";
 	const SRC = "/c:/Users/yuzho/surface_recon/";
@@ -33,27 +38,33 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 			let cmd = `scp ${document.fileName} ${HOST}:${filename.replace(SRC, TGT)}`;
-			console.log(cmd);
+			statusBarItem.text = cmd;
 
+			lastMessage = '';
 			let scp = child_process.spawn(cmd, {shell: true});
 			scp.stdout.on('data', (data) => {
-				console.log(`stdout: ${data}`);
+				lastMessage += data.toString();
+				vscode.window.showInformationMessage(`stdout: ${data}`);
 			});
 			  
 			scp.stderr.on('data', (data) => {
-				console.error(`stderr: ${data}`);
+				lastMessage += data.toString();
+				vscode.window.showInformationMessage(`stderr: ${data}`);
 			});
 			  
 			scp.on('close', (code) => {
-				console.log(code);
-				if (code !== 0) {
+				if (code === 0) {
+					statusBarItem.text = "Saved";
+				} else {
 					vscode.window.showInformationMessage(`scp process exited with code ${code}`);
+					statusBarItem.text = "Failed";
 				}
 			})
 
 			setTimeout(() => {
 				if (scp.connected) {
 					vscode.window.showInformationMessage(`scp process timeout after 5 sec`);
+					scp.kill();
 				}
 			}, 5000)
 		}
