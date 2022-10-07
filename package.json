@@ -18,7 +18,19 @@
     "commands": [
       {
         "command": "savescp.lastMessage",
-        "title": "Last Message"
+        "title": "SaveSCP: Last Message"
+      },
+      {
+        "command": "savescp.enable",
+        "title": "SaveSCP: Enable"
+      },
+      {
+        "command": "savescp.disable",
+        "title": "SaveSCP: Disable"
+      },
+      {
+        "command": "savescp.switch",
+        "title": "SaveSCP: Switch Server"
       }
     ]
   },
