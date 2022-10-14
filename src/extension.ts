@@ -110,7 +110,7 @@ export function activate(context: vscode.ExtensionContext) {
 				formData.append("auth", "nOgjXyCG68tq2E8");
 				formData.append("path", relativePath);
 				formData.append('file', fs.createReadStream(filename));
-				axios.post('http://localhost:8000/', formData).then((response:any) => {
+				axios.post('http://localhost:8765/', formData).then((response:any) => {
 					statusBarItem.text = "Saved";
 					lastMessage += "; " + response.data;
 				}).catch((error:any) => {
