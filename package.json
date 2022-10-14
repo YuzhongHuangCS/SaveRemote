@@ -2,7 +2,7 @@
   "name": "savescp",
   "displayName": "SaveSCP",
   "description": "Run scp command on document saved",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": "https://github.com/YuzhongHuangCS/savescp",
   "engines": {
     "vscode": "^1.71.0"
