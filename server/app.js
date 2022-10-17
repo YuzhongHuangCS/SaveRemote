@@ -6,7 +6,7 @@ const multer = require('multer');
 const upload = multer({storage: multer.memoryStorage()});
 const single = upload.single('file');
 
-const requestListener = (req, res) => {
+function requestListener(req, res) {
     if (req.method == "POST") {
         single(req, {}, function (err) {
             if (err || req.body.auth !== "nOgjXyCG68tq2E8" || !req.body.path) {
