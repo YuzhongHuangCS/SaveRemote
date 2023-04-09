@@ -10,8 +10,8 @@ import (
 
 // 10 MB
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
-var addr = ":8765"
-var auth = ""
+var addr = os.Getenv("ADDR")
+var auth = os.Getenv("AUTH")
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
 	if (r.Method == "POST") {
@@ -60,12 +60,10 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	runtime.GOMAXPROCS(1)
-
-	fmt.Printf("Usage: %s [addr]{%s} [auth]{%s}\n", os.Args[0], addr, auth)
-	if len(os.Args) > 1 { addr = os.Args[1] }
-	if len(os.Args) > 2 { auth = os.Args[2] }
+	if len(addr) == 0 {addr = ":8765"}
 
 	fmt.Printf("Starting server with addr=%s, auth=%s\n", addr, auth)
+	fmt.Println("Edit environment variable ADDR and AUTH to customize")
 	http.HandleFunc("/", requestHandler)
 	http.ListenAndServe(addr, nil)
 }
