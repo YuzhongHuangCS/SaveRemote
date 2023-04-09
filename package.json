@@ -1,9 +1,9 @@
 {
-  "name": "savescp",
-  "displayName": "SaveSCP",
+  "name": "saveremote",
+  "displayName": "SaveRemote",
   "description": "Run scp command on document saved",
-  "version": "0.0.3",
-  "repository": "https://github.com/YuzhongHuangCS/savescp",
+  "version": "1.0.0",
+  "repository": "https://github.com/YuzhongHuangCS/SaveRemote",
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -17,26 +17,28 @@
   "contributes": {
     "commands": [
       {
-        "command": "savescp.lastMessage",
-        "title": "SaveSCP: Last Message"
+        "command": "saveremote.lastMessage",
+        "title": "SaveRemote: Last Message"
       },
       {
-        "command": "savescp.enable",
-        "title": "SaveSCP: Enable"
+        "command": "saveremote.enable",
+        "title": "SaveRemote: Enable"
       },
       {
-        "command": "savescp.disable",
-        "title": "SaveSCP: Disable"
-      },
-      {
-        "command": "savescp.switch",
-        "title": "SaveSCP: Switch Server"
-      },
-      {
-        "command": "savescp.switchSaveMethod",
-        "title": "SaveSCP: Switch Save Method"
+        "command": "saveremote.disable",
+        "title": "SaveRemote: Disable"
       }
-    ]
+    ],
+    "configuration":{
+      "title": "SaveRemote",
+      "properties": {
+        "saveremote.URL": {
+          "type": "string",
+          "default": "",
+          "description": "Remote URL"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
