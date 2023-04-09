@@ -63,7 +63,7 @@ export function activate(context: vscode.ExtensionContext) {
 			formData.append("path", remotePath);
 			formData.append('file', fs.createReadStream(filename));
 			axios.post(config.URL, formData).then((response:any) => {
-				statusBarItem.text = "Saved";
+				statusBarItem.text = response.data;
 				lastMessage += "; " + response.data;
 			}).catch((error:any) => {
 				vscode.window.showInformationMessage(error.message);
