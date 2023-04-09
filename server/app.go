@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"io"
+	"runtime"
 	"net/http"
 )
 
@@ -56,7 +57,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", requestHandler);
+	runtime.GOMAXPROCS(1)
+	http.HandleFunc("/", requestHandler)
 	fmt.Println("Server Started")
 	http.ListenAndServe(":8765", nil)
 }
