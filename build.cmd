@@ -1,2 +1,2 @@
 vsce package
-code --install-extension savescp-0.0.3.vsix
+code --install-extension saveremote-1.0.0.vsix

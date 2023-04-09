@@ -10,6 +10,8 @@ import (
 
 // 10 MB
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+var addr = ":8765"
+var auth = ""
 
 func requestHandler(w http.ResponseWriter, r *http.Request) {
 	if (r.Method == "POST") {
@@ -28,8 +30,8 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer file.Close()
 
-		if len(r.Form["auth"]) > 0 && r.Form["auth"][0] == "nOgjXyCG68tq2E8" && len(r.Form["path"]) > 0 {
-			savePath := "/home1/yuzhongh/surface_recon/" + r.Form["path"][0]
+		if len(r.Form["auth"]) > 0 && r.Form["auth"][0] == auth && len(r.Form["path"]) > 0 {
+			savePath := r.Form["path"][0]
 
 			dst, err := os.Create(savePath)
 			if err != nil {
@@ -58,7 +60,12 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	runtime.GOMAXPROCS(1)
+
+	fmt.Printf("Usage: %s [addr]{%s} [auth]{%s}\n", os.Args[0], addr, auth)
+	if len(os.Args) > 1 { addr = os.Args[1] }
+	if len(os.Args) > 2 { auth = os.Args[2] }
+
+	fmt.Printf("Starting server with addr=%s, auth=%s\n", addr, auth)
 	http.HandleFunc("/", requestHandler)
-	fmt.Println("Server Started")
-	http.ListenAndServe(":8765", nil)
+	http.ListenAndServe(addr, nil)
 }

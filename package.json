@@ -1,7 +1,7 @@
 {
   "name": "saveremote",
   "displayName": "SaveRemote",
-  "description": "Run scp command on document saved",
+  "description": "Save file to remote server on document saved",
   "version": "1.0.0",
   "repository": "https://github.com/YuzhongHuangCS/SaveRemote",
   "engines": {
@@ -36,6 +36,21 @@
           "type": "string",
           "default": "",
           "description": "Remote URL"
+        },
+        "saveremote.localPrefix": {
+          "type": "string",
+          "default": "",
+          "description": "Local prefix to remove"
+        },
+        "saveremote.remotePrefix": {
+          "type": "string",
+          "default": "",
+          "description": "Remote prefix to add"
+        },
+        "saveremote.Auth": {
+          "type": "string",
+          "default": "",
+          "description": "Optional authentication token"
         }
       }
     }
