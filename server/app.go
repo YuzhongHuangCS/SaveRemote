@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"io"
+	"path"
 	"runtime"
 	"net/http"
 )
@@ -32,7 +33,7 @@ func requestHandler(w http.ResponseWriter, r *http.Request) {
 
 		if len(r.Form["auth"]) > 0 && r.Form["auth"][0] == auth && len(r.Form["path"]) > 0 {
 			savePath := r.Form["path"][0]
-
+			os.MkdirAll(path.Dir(savePath), os.ModePerm)
 			dst, err := os.Create(savePath)
 			if err != nil {
 				fmt.Println(err)

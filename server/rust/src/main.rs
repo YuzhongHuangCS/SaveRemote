@@ -1,6 +1,6 @@
-use std::{env, str, net::SocketAddr};
+use std::{env, str, path::Path, net::SocketAddr};
 use bytes::Bytes;
-use tokio::{fs::File, io::AsyncWriteExt};
+use tokio::{fs, fs::File, io::AsyncWriteExt};
 use axum::{Router, routing::post, http::StatusCode, extract::Multipart};
 
 #[tokio::main(flavor = "current_thread")]
@@ -30,6 +30,7 @@ async fn main() {
 
         if token.len() > 0 && path.len() > 0 && buffer.len() > 0 {
             if token == auth {
+                fs::create_dir_all(Path::new(&path).parent().unwrap()).await.unwrap();
                 match File::create(path.clone()).await {
                     Ok(mut file) => {
                         match file.write_all(&buffer).await {
