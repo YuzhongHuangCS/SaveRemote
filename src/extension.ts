@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs'
 import * as FormData from 'form-data';
 const axios = require('axios');
+const path = require('path');
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -53,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			let relativePath = filename.substring(config.localPrefix.length);
-			let remotePath = config.remotePrefix + relativePath;
+			let remotePath = config.remotePrefix + relativePath.split(path.sep).join(path.posix.sep);
 			let cmd = `Sending ${relativePath} to ${remotePath}`;
 			statusBarItem.text = cmd;
 			lastMessage = cmd;
