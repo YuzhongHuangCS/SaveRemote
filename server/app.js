@@ -1,7 +1,8 @@
 'use strict';
 
-const http = require('http');
 const fs = require('fs');
+const http = require('http');
+const path = require('path');
 const multer = require('multer');
 const upload = multer({storage: multer.memoryStorage()});
 const single = upload.single('file');
@@ -23,6 +24,7 @@ function requestListener(req, res) {
                     res.end("Unauthorized");
                 } else {
                     let savePath = req.body.path;
+                    fs.mkdirSync(path.dirname(savePath), {recursive: true});
                     fs.writeFile(savePath, req.file.buffer, (err) => {
                         if (err) {
                             console.error(err);
