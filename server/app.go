@@ -77,23 +77,12 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 
 			switch mode := fi.Mode(); {
 				case mode.IsRegular():
-					fileBytes, err := ioutil.ReadFile(readPath)
-					if err != nil {
-						fmt.Println("NotFound:", readPath)
-						http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-						return
-					}
+					fileBytes, _ := ioutil.ReadFile(readPath)
 					w.Header().Set("content-type", "application/octet-stream")
 					w.Write(fileBytes)
 					fmt.Println("Downloaded:", readPath)
 				case mode.IsDir():
-					files, err := ioutil.ReadDir(readPath)
-					if err != nil {
-						fmt.Println("NotFound:", readPath)
-						http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-						return
-					}
-
+					files, _ := ioutil.ReadDir(readPath)
 					fullPaths := []string {}
 					for _, file := range files {
 						fullPaths = append(fullPaths, path.Join(readPath, file.Name()));
