@@ -1,51 +1,68 @@
 'use strict';
 
 const fs = require('fs');
-const http = require('http');
 const path = require('path');
+const express = require('express');
 const multer = require('multer');
 const upload = multer({storage: multer.memoryStorage()});
-const single = upload.single('file');
 
 const port = process.env.PORT || 8765;
 const auth = process.env.AUTH || "";
+const app = express();
+app.use(express.urlencoded({extended: false}));
 
-function requestListener(req, res) {
-    if (req.method == "POST") {
-        single(req, {}, function (err) {
+
+app.post('/upload', upload.single('file'), async (req, res) => {
+    if (req.body.auth !== auth || !req.body.path || !req.file) {
+        console.log(req.body);
+        res.sendStatus(401);
+    } else {
+        let savePath = req.body.path;
+        await fs.promises.mkdir(path.dirname(savePath), {recursive: true});
+        fs.writeFile(savePath, req.file.buffer, (err) => {
             if (err) {
                 console.error(err);
-                res.writeHead(400);
-                res.end("Bad Request");
+                res.sendStatus(500);
             } else {
-                if (req.body.auth !== auth || !req.body.path) {
-                    console.log(req.body);
-                    res.writeHead(401);
-                    res.end("Unauthorized");
+                console.log(`Saved: ${savePath}`);
+                res.end("Saved");
+            }
+        })
+    }
+})
+
+app.post('/download', async (req, res) => {
+    if (req.body.auth !== auth || !req.body.path) {
+        console.log(req.body);
+        res.sendStatus(401);
+    } else {
+        fs.stat(req.body.path, async (err, stats) => {
+            if (err) {
+                console.log(`NotFound: ${req.body.path}`)
+                res.sendStatus(404);
+            } else {
+                if (stats.isFile()) {
+                    res.sendFile(req.body.path, {dotfiles: "allow"});
+                    console.log(`Downloaded: ${req.body.path}`);
                 } else {
-                    let savePath = req.body.path;
-                    fs.mkdirSync(path.dirname(savePath), {recursive: true});
-                    fs.writeFile(savePath, req.file.buffer, (err) => {
-                        if (err) {
-                            console.error(err);
-                            res.writeHead(500);
-                            res.end("Internal Server Error");
-                        } else {
-                            console.log(`Saved: ${savePath}`);
-                            res.writeHead(200);
-                            res.end("Saved");
-                        }
-                    })
+                    if (stats.isDirectory()) {
+                        let files = await fs.promises.readdir(req.body.path);
+                        res.json({
+                            'files': files.map((f) => path.join(req.body.path, f))
+                        })
+                        console.log(`Listed: ${req.body.path}`);
+                    } else {
+                        console.log(`NotFound: ${req.body.path}`)
+                        res.sendStatus(404);
+                    }
                 }
             }
         })
-    } else {
-        res.writeHead(405);
-        res.end("Method Not Allowed");
     }
-}
+})
 
 console.log(`Starting server with port=${port}, auth=${auth}`)
 console.log("Edit environment variable PORT and AUTH to customize")
-const server = http.createServer(requestListener);
-server.listen(port);
+app.listen(port, () => {
+    console.log(`Listening on ${port}`)
+})

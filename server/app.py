@@ -5,7 +5,7 @@ import tornado.web
 PORT = os.environ.get("PORT", "8765")
 AUTH = os.environ.get("AUTH", "")
 
-class MainHandler(tornado.web.RequestHandler):
+class UploadHandler(tornado.web.RequestHandler):
     def post(self):
         auth = self.get_body_argument("auth")
         path = self.get_body_argument("path")
@@ -29,15 +29,16 @@ class DownloadHandler(tornado.web.RequestHandler):
                 print("Downloaded:", path)
             elif os.path.isdir(path):
                 self.finish({'files': [os.path.join(path, f) for f in os.listdir(path)]})
-                print("Listed", path)
+                print("Listed:", path)
             else:
+                print("NotFound:", path)
                 raise tornado.web.HTTPError(status_code=404)
         else:
             raise tornado.web.HTTPError(status_code=401)
 
 async def main():
     app = tornado.web.Application([
-        (r"/", MainHandler),
+        (r"/upload", UploadHandler),
         (r"/download", DownloadHandler),
     ])
     app.listen(PORT)

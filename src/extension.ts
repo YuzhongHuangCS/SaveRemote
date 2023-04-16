@@ -1,10 +1,10 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as fs from 'fs'
-import * as FormData from 'form-data';
-const axios = require('axios');
+const fs = require('fs');
 const path = require('path');
+const FormData = require('form-data');
+const axios = require('axios');
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -30,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	async function download(remotePath:string) {
-		let formData = new FormData();
+		let formData = new URLSearchParams();
 		formData.append("auth", config.Auth);
 		formData.append("path", remotePath);
 
@@ -79,8 +79,10 @@ export function activate(context: vscode.ExtensionContext) {
 			let remotePath = config.remotePrefix + relativePath.split(path.sep).join(path.posix.sep);
 			await download(remotePath);
 
-			statusBarItem.text = "Downloaded";
-			lastMessage += "; Downloaded";
+			if (statusBarItem.text !== "Failed") {
+				statusBarItem.text = "Downloaded";
+				lastMessage += "; Downloaded";
+			}
 		}
 	}));
 
@@ -103,7 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
 			formData.append("auth", config.Auth);
 			formData.append("path", remotePath);
 			formData.append('file', fs.createReadStream(filename));
-			axios.post(config.URL, formData).then((response:any) => {
+			axios.post(config.URL + 'upload', formData).then((response:any) => {
 				statusBarItem.text = response.data;
 				lastMessage += "; " + response.data;
 			}).catch(error_callback);
