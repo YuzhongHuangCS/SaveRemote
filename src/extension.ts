@@ -23,6 +23,30 @@ export function activate(context: vscode.ExtensionContext) {
 	statusBarItem.show();
 	context.subscriptions.push(statusBarItem);
 
+	function error_callback(error:any) {
+		vscode.window.showInformationMessage(error.message);
+		statusBarItem.text = "Failed";
+		lastMessage = error.message
+	}
+
+	async function download(remotePath:string) {
+		let formData = new FormData();
+		formData.append("auth", config.Auth);
+		formData.append("path", remotePath);
+
+		await axios.post(config.URL + 'download', formData, {responseType: 'arraybuffer'}).then(async (response:any) => {
+			if (response.headers['content-type'].includes('application/json')) {
+				let json = JSON.parse(response.data.toString());
+				await Promise.all(json.files.map(download));
+			} else {
+				let relativePath = remotePath.substring(config.remotePrefix.length);
+				let localPath = config.localPrefix + relativePath.split(path.posix.sep).join(path.sep);
+				await fs.promises.mkdir(path.dirname(localPath), {recursive: true});
+				await fs.promises.writeFile(localPath, response.data);
+			}
+		}).catch(error_callback);
+	}
+
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
@@ -42,6 +66,22 @@ export function activate(context: vscode.ExtensionContext) {
 		enable = false;
 		statusBarItem.text = "Disabled";
 		vscode.window.showInformationMessage("SaveRemote Disabled");
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('saveremote.download', async () => {
+		let relativePath = await vscode.window.showInputBox({placeHolder: "Relative Path to Download"});
+
+		if (relativePath) {
+			let cmd = `Downloading ${relativePath}`;
+			statusBarItem.text = cmd;
+			lastMessage = cmd;
+
+			let remotePath = config.remotePrefix + relativePath.split(path.sep).join(path.posix.sep);
+			await download(remotePath);
+
+			statusBarItem.text = "Downloaded";
+			lastMessage += "; Downloaded";
+		}
 	}));
 
 	vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
@@ -66,11 +106,7 @@ export function activate(context: vscode.ExtensionContext) {
 			axios.post(config.URL, formData).then((response:any) => {
 				statusBarItem.text = response.data;
 				lastMessage += "; " + response.data;
-			}).catch((error:any) => {
-				vscode.window.showInformationMessage(error.message);
-				statusBarItem.text = "Failed";
-				lastMessage = error.message
-			});
+			}).catch(error_callback);
 		}
 	});
 }

@@ -2,7 +2,7 @@
   "name": "saveremote",
   "displayName": "SaveRemote",
   "description": "Save file to remote server on document saved",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "repository": "https://github.com/YuzhongHuangCS/SaveRemote",
   "engines": {
     "vscode": "^1.71.0"
@@ -27,6 +27,10 @@
       {
         "command": "saveremote.disable",
         "title": "SaveRemote: Disable"
+      },
+      {
+        "command": "saveremote.download",
+        "title": "SaveRemote: Download"
       }
     ],
     "configuration":{

@@ -1,7 +1,9 @@
 out
 dist
+target
 node_modules
 .vscode-test/
 *.vsix
 *.js
 *.js.map
+*lock*
