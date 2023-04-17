@@ -70,10 +70,10 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 			readPath := r.Form["path"][0]
 			fi, err := os.Stat(readPath)
 			if err != nil {
-				fullPaths, _ := filepath.Glob(readPath)
-				if len(fullPaths) > 0 {
+				paths, _ := filepath.Glob(readPath)
+				if len(paths) > 0 {
 					w.Header().Set("content-type", "application/json")
-					json.NewEncoder(w).Encode(map[string][]string {"files": fullPaths})
+					json.NewEncoder(w).Encode(map[string][]string {"files": paths})
 					fmt.Println("Listed:", readPath)
 				} else {
 					fmt.Println("NotFound:", readPath)
@@ -90,13 +90,13 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("Downloaded:", readPath)
 				case mode.IsDir():
 					files, _ := ioutil.ReadDir(readPath)
-					fullPaths := []string {}
+					paths := []string {}
 					for _, file := range files {
-						fullPaths = append(fullPaths, path.Join(readPath, file.Name()));
+						paths = append(paths, path.Join(readPath, file.Name()));
 					}
 
 					w.Header().Set("content-type", "application/json")
-					json.NewEncoder(w).Encode(map[string][]string {"files": fullPaths})
+					json.NewEncoder(w).Encode(map[string][]string {"files": paths})
 					fmt.Println("Listed:", readPath)
 				default:
 					fmt.Println("NotFound:", readPath)

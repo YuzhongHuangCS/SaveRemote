@@ -39,9 +39,9 @@ app.post('/download', async (req, res) => {
     } else {
         fs.stat(req.body.path, async (err, stats) => {
             if (err) {
-                let globs = await glob.glob(req.body.path);
-                if (globs.length > 0) {
-                    res.json({'files': globs})
+                let paths = await glob.glob(req.body.path);
+                if (paths.length > 0) {
+                    res.json({files: paths})
                     console.log(`Listed: ${req.body.path}`);
                 } else {
                     console.log(`NotFound: ${req.body.path}`);
@@ -54,9 +54,8 @@ app.post('/download', async (req, res) => {
                 } else {
                     if (stats.isDirectory()) {
                         let files = await fs.promises.readdir(req.body.path);
-                        res.json({
-                            'files': files.map((f) => path.join(req.body.path, f))
-                        })
+                        let paths = files.map((f) => path.join(req.body.path, f))
+                        res.json({files: paths})
                         console.log(`Listed: ${req.body.path}`);
                     } else {
                         console.log(`NotFound: ${req.body.path}`)

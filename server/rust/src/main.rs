@@ -2,6 +2,7 @@ use std::{env, str, fs, fs::File, io::{Read, Write}, path::Path, net::SocketAddr
 use bytes::Bytes;
 use axum::{Router, routing::post, http::StatusCode, Form, Json, extract::Multipart, response::IntoResponse};
 use serde::{Deserialize, Serialize};
+use glob::glob;
 
 #[derive(Deserialize)]
 struct DownloadRequest {
@@ -72,12 +73,17 @@ async fn main() {
                 return buffer.into_response();
             } else {
                 if path.is_dir() {
+                    let paths = path.read_dir().unwrap().map(|f| f.unwrap().path().to_str().unwrap().to_string()).collect::<Vec<String>>();
                     println!("Listed: {0}", req.path);
-                    return Json(DownloadResponse {
-                        files: path.read_dir().unwrap().map(|f| f.unwrap().path().to_str().unwrap().to_string()).collect::<Vec<String>>()
-                    }).into_response();
+                    return Json(DownloadResponse {files: paths}).into_response();
                 } else {
-                    return StatusCode::NOT_FOUND.into_response();
+                    let paths = glob(&req.path).unwrap().map(|f| f.unwrap().as_path().to_str().unwrap().to_string()).collect::<Vec<String>>();
+                    if paths.len() > 0 {
+                        println!("Listed: {0}", req.path);
+                        return Json(DownloadResponse {files: paths}).into_response();
+                    } else {
+                        return StatusCode::NOT_FOUND.into_response();
+                    }
                 }
             }
         } else {

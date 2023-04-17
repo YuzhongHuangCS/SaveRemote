@@ -32,9 +32,9 @@ class DownloadHandler(tornado.web.RequestHandler):
                 self.finish({'files': [os.path.join(path, f) for f in os.listdir(path)]})
                 print("Listed:", path)
             else:
-                globs = glob.glob(path)
-                if len(globs) > 0:
-                    self.finish({'files': globs})
+                paths = glob.glob(path)
+                if len(paths) > 0:
+                    self.finish({'files': paths})
                     print("Listed:", path)
                 else:
                     print("NotFound:", path)
