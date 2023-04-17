@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"path"
+	"path/filepath"
 	"runtime"
 	"net/http"
 	"encoding/json"
@@ -67,11 +68,17 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 
 		if len(r.Form["auth"]) > 0 && r.Form["auth"][0] == auth && len(r.Form["path"]) > 0 {
 			readPath := r.Form["path"][0]
-
 			fi, err := os.Stat(readPath)
 			if err != nil {
-				fmt.Println("NotFound:", readPath)
-				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+				fullPaths, _ := filepath.Glob(readPath)
+				if len(fullPaths) > 0 {
+					w.Header().Set("content-type", "application/json")
+					json.NewEncoder(w).Encode(map[string][]string {"files": fullPaths})
+					fmt.Println("Listed:", readPath)
+				} else {
+					fmt.Println("NotFound:", readPath)
+					http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+				}
 				return
 			}
 
