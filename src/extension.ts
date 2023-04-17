@@ -17,7 +17,6 @@ export function activate(context: vscode.ExtensionContext) {
 	let enable = config.URL.length > 0 && config.localPrefix.length > 0 && config.remotePrefix.length > 0;
 
 	let lastMessage = '';
-	let lastTime = Date.now();
 	let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
 	statusBarItem.text = enable ? "Ready" : "Disabled";
 	statusBarItem.command = 'saveremote.lastMessage';
@@ -149,9 +148,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
-		if (enable && (Date.now() - lastTime > 1000) && document.uri.scheme === "file") {
-			lastTime = Date.now()
-
+		if (enable && document.uri.scheme === "file") {
 			let filename = document.fileName;
 			if (filename.includes(".pyc") || filename.includes(".git") || !filename.includes(config.localPrefix)) {
 				return;

@@ -10,7 +10,7 @@ struct DownloadRequest {
     path: String,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize)]
 struct DownloadResponse {
     files: Vec<String>,
 }
