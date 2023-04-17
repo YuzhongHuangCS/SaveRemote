@@ -1,4 +1,5 @@
 import os
+import glob
 import asyncio
 import tornado.web
 
@@ -31,8 +32,13 @@ class DownloadHandler(tornado.web.RequestHandler):
                 self.finish({'files': [os.path.join(path, f) for f in os.listdir(path)]})
                 print("Listed:", path)
             else:
-                print("NotFound:", path)
-                raise tornado.web.HTTPError(status_code=404)
+                globs = glob.glob(path)
+                if len(globs) > 0:
+                    self.finish({'files': globs})
+                    print("Listed:", path)
+                else:
+                    print("NotFound:", path)
+                    raise tornado.web.HTTPError(status_code=404)
         else:
             raise tornado.web.HTTPError(status_code=401)
 

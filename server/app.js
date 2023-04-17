@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const multer = require('multer');
+const glob = require('glob');
 const upload = multer({storage: multer.memoryStorage()});
 
 const port = process.env.PORT || 8765;
@@ -38,8 +39,14 @@ app.post('/download', async (req, res) => {
     } else {
         fs.stat(req.body.path, async (err, stats) => {
             if (err) {
-                console.log(`NotFound: ${req.body.path}`)
-                res.sendStatus(404);
+                let globs = await glob.glob(req.body.path);
+                if (globs.length > 0) {
+                    res.json({'files': globs})
+                    console.log(`Listed: ${req.body.path}`);
+                } else {
+                    console.log(`NotFound: ${req.body.path}`);
+                    res.sendStatus(404);
+                }
             } else {
                 if (stats.isFile()) {
                     res.sendFile(req.body.path, {dotfiles: "allow"});

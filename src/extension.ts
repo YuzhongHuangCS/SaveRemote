@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data');
 const axios = require('axios');
+const glob = require('glob');
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -110,18 +111,22 @@ export function activate(context: vscode.ExtensionContext) {
 		let relativePath = await vscode.window.showInputBox({placeHolder: "Relative Path to Upload"});
 
 		if (relativePath) {
-			let localPath = config.localPrefix + relativePath;
+			let cmd = `Uploading ${relativePath}`;
+			statusBarItem.text = cmd;
+			lastMessage = cmd;
 
+			let localPath = config.localPrefix + relativePath;
 			fs.stat(localPath, async (error:any, stats:any) => {
 				if (error) {
-					statusBarItem.text = "Failed";
-					lastMessage = error.message;
-					vscode.window.showInformationMessage(lastMessage);
+					let globs = await glob.glob(localPath, { windowsPathsNoEscape: true });
+					if (globs.length > 0) {
+						await Promise.all(globs.map(upload));
+					} else {
+						statusBarItem.text = "Failed";
+						lastMessage = error.message;
+						vscode.window.showInformationMessage(lastMessage);
+					}
 				} else {
-					let cmd = `Uploading ${relativePath}`;
-					statusBarItem.text = cmd;
-					lastMessage = cmd;
-
 					if (stats.isFile()) {
 						await upload(localPath);
 					} else {
@@ -134,11 +139,10 @@ export function activate(context: vscode.ExtensionContext) {
 							vscode.window.showInformationMessage(lastMessage);
 						}
 					}
-
-					if (statusBarItem.text !== "Failed") {
-						statusBarItem.text = "Uploaded";
-						lastMessage += "; Uploaded";
-					}
+				}
+				if (statusBarItem.text !== "Failed") {
+					statusBarItem.text = "Uploaded";
+					lastMessage += "; Uploaded";
 				}
 			})
 		}
