@@ -31,6 +31,10 @@
       {
         "command": "saveremote.download",
         "title": "SaveRemote: Download"
+      },
+      {
+        "command": "saveremote.upload",
+        "title": "SaveRemote: Upload"
       }
     ],
     "configuration":{

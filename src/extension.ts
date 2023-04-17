@@ -24,9 +24,9 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(statusBarItem);
 
 	function error_callback(error:any) {
-		vscode.window.showInformationMessage(error.message);
 		statusBarItem.text = "Failed";
-		lastMessage = error.message
+		lastMessage = error.message;
+		vscode.window.showInformationMessage(lastMessage);
 	}
 
 	async function download(remotePath:string) {
@@ -45,6 +45,26 @@ export function activate(context: vscode.ExtensionContext) {
 				await fs.promises.writeFile(localPath, response.data);
 			}
 		}).catch(error_callback);
+	}
+
+	async function upload(filename:string) {
+		let relativePath = filename.substring(config.localPrefix.length);
+		let remotePath = config.remotePrefix + relativePath.split(path.sep).join(path.posix.sep);
+
+		let formData = new FormData();
+		formData.append("auth", config.Auth);
+		formData.append("path", remotePath);
+		formData.append('file', fs.createReadStream(filename));
+		await axios.post(config.URL + 'upload', formData).catch(error_callback);
+	}
+
+	async function walkdir(filename:string) {
+		let dirents = await fs.promises.readdir(filename, { withFileTypes: true });
+		let files = await Promise.all(dirents.map((dirent:any) => {
+			let child = path.join(filename, dirent.name);
+			return dirent.isDirectory() ? walkdir(child) : child;
+		}));
+		return files.flat()
 	}
 
 	// The command has been defined in the package.json file
@@ -86,7 +106,45 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 
-	vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
+	context.subscriptions.push(vscode.commands.registerCommand('saveremote.upload', async () => {
+		let relativePath = await vscode.window.showInputBox({placeHolder: "Relative Path to Upload"});
+
+		if (relativePath) {
+			let localPath = config.localPrefix + relativePath;
+
+			fs.stat(localPath, async (error:any, stats:any) => {
+				if (error) {
+					statusBarItem.text = "Failed";
+					lastMessage = error.message;
+					vscode.window.showInformationMessage(lastMessage);
+				} else {
+					let cmd = `Uploading ${relativePath}`;
+					statusBarItem.text = cmd;
+					lastMessage = cmd;
+
+					if (stats.isFile()) {
+						await upload(localPath);
+					} else {
+						if (stats.isDirectory()) {
+							let files = await walkdir(localPath);
+							await Promise.all(files.map(upload));
+						} else {
+							statusBarItem.text = "Failed";
+							lastMessage = `NotFound: ${relativePath}`;
+							vscode.window.showInformationMessage(lastMessage);
+						}
+					}
+
+					if (statusBarItem.text !== "Failed") {
+						statusBarItem.text = "Uploaded";
+						lastMessage += "; Uploaded";
+					}
+				}
+			})
+		}
+	}));
+
+	vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
 		if (enable && (Date.now() - lastTime > 1000) && document.uri.scheme === "file") {
 			lastTime = Date.now()
 
@@ -101,14 +159,10 @@ export function activate(context: vscode.ExtensionContext) {
 			statusBarItem.text = cmd;
 			lastMessage = cmd;
 
-			let formData = new FormData();
-			formData.append("auth", config.Auth);
-			formData.append("path", remotePath);
-			formData.append('file', fs.createReadStream(filename));
-			axios.post(config.URL + 'upload', formData).then((response:any) => {
-				statusBarItem.text = response.data;
-				lastMessage += "; " + response.data;
-			}).catch(error_callback);
+			await upload(filename);
+
+			statusBarItem.text = "Saved";
+			lastMessage += "; Saved";
 		}
 	});
 }
