@@ -6,6 +6,8 @@ const path = require('path');
 const FormData = require('form-data');
 const axios = require('axios');
 const glob = require('glob');
+const pLimit = require('p-limit');
+const limit = pLimit(10);
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -37,7 +39,9 @@ export function activate(context: vscode.ExtensionContext) {
 		await axios.post(config.URL + 'download', formData, {responseType: 'arraybuffer'}).then(async (response:any) => {
 			if (response.headers['content-type'].includes('application/json')) {
 				let json = JSON.parse(response.data.toString());
-				await Promise.all(json.files.map(download));
+				await Promise.all(json.files.map((f:any) => {
+					return limit(() => download(f));
+				}));
 			} else {
 				let relativePath = remotePath.substring(config.remotePrefix.length);
 				let localPath = config.localPrefix + relativePath.split(path.posix.sep).join(path.sep);
@@ -119,7 +123,9 @@ export function activate(context: vscode.ExtensionContext) {
 				if (error) {
 					let globs = await glob.glob(localPath, { windowsPathsNoEscape: true });
 					if (globs.length > 0) {
-						await Promise.all(globs.map(upload));
+						await Promise.all(globs.map((f:any) => {
+							return limit(() => upload(f));
+						}));
 					} else {
 						statusBarItem.text = "Failed";
 						lastMessage = error.message;
@@ -131,7 +137,9 @@ export function activate(context: vscode.ExtensionContext) {
 					} else {
 						if (stats.isDirectory()) {
 							let files = await walkdir(localPath);
-							await Promise.all(files.map(upload));
+							await Promise.all(files.map((f:any) => {
+								return limit(() => upload(f));
+							}));
 						} else {
 							statusBarItem.text = "Failed";
 							lastMessage = `NotFound: ${relativePath}`;
