@@ -12,8 +12,8 @@ import (
 	"encoding/json"
 )
 
-// 10 MB
-const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
+// 1 GB
+const MAX_UPLOAD_SIZE = 1024 * 1024 * 1024;
 var addr = os.Getenv("ADDR")
 var auth = os.Getenv("AUTH")
 

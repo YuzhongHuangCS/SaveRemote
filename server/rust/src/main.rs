@@ -1,6 +1,6 @@
 use std::{env, str, fs, fs::File, io::{Read, Write}, path::Path, net::SocketAddr};
 use bytes::Bytes;
-use axum::{Router, routing::post, http::StatusCode, Form, Json, extract::Multipart, response::IntoResponse};
+use axum::{Router, routing::post, http::StatusCode, Form, Json, extract::{Multipart, DefaultBodyLimit}, response::IntoResponse};
 use serde::{Deserialize, Serialize};
 use glob::glob;
 
@@ -14,6 +14,9 @@ struct DownloadRequest {
 struct DownloadResponse {
     files: Vec<String>,
 }
+
+// 1 GB
+static MAX_UPLOAD_SIZE:usize = 1024 * 1024 * 1024;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
@@ -89,7 +92,7 @@ async fn main() {
         } else {
             return StatusCode::UNAUTHORIZED.into_response();
         }
-    }));
+    })).layer(DefaultBodyLimit::max(MAX_UPLOAD_SIZE));
 
     // run it
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
