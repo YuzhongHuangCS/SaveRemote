@@ -36,19 +36,20 @@ export function activate(context: vscode.ExtensionContext) {
 		formData.append("auth", config.Auth);
 		formData.append("path", remotePath);
 
-		await axios.post(config.URL + 'download', formData, {responseType: 'arraybuffer'}).then(async (response:any) => {
+		try {
+			let response = await limit(() => axios.post(config.URL + 'download', formData, {responseType: 'arraybuffer'}))
 			if (response.headers['content-type'].includes('application/json')) {
 				let json = JSON.parse(response.data.toString());
-				await Promise.all(json.files.map((f:any) => {
-					return limit(() => download(f));
-				}));
+				await Promise.all(json.files.map(download));
 			} else {
 				let relativePath = remotePath.substring(config.remotePrefix.length);
 				let localPath = config.localPrefix + relativePath.split(path.posix.sep).join(path.sep);
 				await fs.promises.mkdir(path.dirname(localPath), {recursive: true});
 				await fs.promises.writeFile(localPath, response.data);
 			}
-		}).catch(error_callback);
+		} catch(error) {
+			error_callback(error);
+		}
 	}
 
 	async function upload(filename:string) {
@@ -59,7 +60,8 @@ export function activate(context: vscode.ExtensionContext) {
 		formData.append("auth", config.Auth);
 		formData.append("path", remotePath);
 		formData.append('file', fs.createReadStream(filename));
-		await axios.post(config.URL + 'upload', formData).catch(error_callback);
+
+		await limit(() => axios.post(config.URL + 'upload', formData).catch(error_callback));
 	}
 
 	async function walkdir(filename:string) {
@@ -123,9 +125,7 @@ export function activate(context: vscode.ExtensionContext) {
 				if (error) {
 					let globs = await glob.glob(localPath, { windowsPathsNoEscape: true });
 					if (globs.length > 0) {
-						await Promise.all(globs.map((f:any) => {
-							return limit(() => upload(f));
-						}));
+						await Promise.all(globs.map(upload));
 					} else {
 						statusBarItem.text = "Failed";
 						lastMessage = error.message;
@@ -137,9 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
 					} else {
 						if (stats.isDirectory()) {
 							let files = await walkdir(localPath);
-							await Promise.all(files.map((f:any) => {
-								return limit(() => upload(f));
-							}));
+							await Promise.all(files.map(upload));
 						} else {
 							statusBarItem.text = "Failed";
 							lastMessage = `NotFound: ${relativePath}`;
@@ -170,8 +168,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 			await upload(filename);
 
-			statusBarItem.text = "Saved";
-			lastMessage += "; Saved";
+			if (statusBarItem.text !== "Failed") {
+				statusBarItem.text = "Saved";
+				lastMessage += "; Saved";
+			}
 		}
 	});
 }
