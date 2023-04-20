@@ -90,9 +90,9 @@ func downloadHandler(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("Downloaded:", readPath)
 				case mode.IsDir():
 					files, _ := ioutil.ReadDir(readPath)
-					paths := []string {}
-					for _, file := range files {
-						paths = append(paths, path.Join(readPath, file.Name()));
+					paths := make([]string, len(files))
+					for i, file := range files {
+						paths[i] = path.Join(readPath, file.Name());
 					}
 
 					w.Header().Set("content-type", "application/json")
