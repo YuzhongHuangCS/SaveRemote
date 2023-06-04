@@ -17,6 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// This line of code will only be executed once when your extension is activated
 	let config = vscode.workspace.getConfiguration("saveremote");
 	let enable = config.URL.length > 0 && config.localPrefix.length > 0 && config.remotePrefix.length > 0;
+	let overwrite = false;
 
 	let lastMessage = '';
 	let statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0);
@@ -35,6 +36,14 @@ export function activate(context: vscode.ExtensionContext) {
 		let formData = new URLSearchParams();
 		formData.append("auth", config.Auth);
 		formData.append("path", remotePath);
+		let relativePath = remotePath.substring(config.remotePrefix.length);
+		let localPath = config.localPrefix + relativePath.split(path.posix.sep).join(path.sep);
+		if (!overwrite) {
+			let stats = await fs.promises.stat(localPath);
+			if (stats.isFile()) {
+				return;
+			}
+		}
 
 		try {
 			let response = await limit(() => axios.post(config.URL + 'download', formData, {responseType: 'arraybuffer'}))
@@ -42,8 +51,6 @@ export function activate(context: vscode.ExtensionContext) {
 				let json = JSON.parse(response.data.toString());
 				await Promise.all(json.files.map(download));
 			} else {
-				let relativePath = remotePath.substring(config.remotePrefix.length);
-				let localPath = config.localPrefix + relativePath.split(path.posix.sep).join(path.sep);
 				await fs.promises.mkdir(path.dirname(localPath), {recursive: true});
 				await fs.promises.writeFile(localPath, response.data);
 			}
@@ -98,6 +105,11 @@ export function activate(context: vscode.ExtensionContext) {
 		let relativePath = await vscode.window.showInputBox({placeHolder: "Relative Path to Download"});
 
 		if (relativePath) {
+			if (relativePath[0] === '!') {
+				relativePath = relativePath.substring(1);
+				overwrite = true;
+			}
+
 			let cmd = `Downloading ${relativePath}`;
 			statusBarItem.text = cmd;
 			lastMessage = cmd;
@@ -105,6 +117,7 @@ export function activate(context: vscode.ExtensionContext) {
 			let remotePath = config.remotePrefix + relativePath.split(path.sep).join(path.posix.sep);
 			await download(remotePath);
 
+			overwrite = false;
 			if (statusBarItem.text !== "Failed") {
 				statusBarItem.text = "Downloaded";
 				lastMessage += "; Downloaded";
