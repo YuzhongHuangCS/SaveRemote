@@ -156,7 +156,7 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
 		if (enable && document.uri.scheme === "file") {
 			let filename = document.fileName;
-			if (filename.includes(".pyc") || filename.includes(".git") || !filename.includes(config.localPrefix)) {
+			if (!filename.includes(config.localPrefix)) {
 				return;
 			}
 
