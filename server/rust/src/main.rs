@@ -1,4 +1,5 @@
-use std::{env, str, fs, fs::File, io::{Read, Write}, path::Path, net::SocketAddr};
+use std::{env, str, path::Path, net::SocketAddr};
+use tokio::{fs, fs::File, io::AsyncReadExt, io::AsyncWriteExt};
 use bytes::Bytes;
 use axum::{Router, routing::post, http::StatusCode, Form, Json, extract::{Multipart, DefaultBodyLimit}, response::IntoResponse};
 use serde::{Deserialize, Serialize};
@@ -18,7 +19,7 @@ struct DownloadResponse {
 // 1 GB
 static MAX_UPLOAD_SIZE:usize = 1024 * 1024 * 1024;
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main(flavor = "multi_thread", worker_threads = 8)]
 async fn main() {
     let port = env::var("PORT").unwrap_or("8765".to_string()).parse::<u16>().unwrap();
     let auth = env::var("AUTH").unwrap_or("".to_string());
@@ -46,10 +47,10 @@ async fn main() {
 
         if token.len() > 0 && path.len() > 0 && buffer.len() > 0 {
             if token == auth {
-                fs::create_dir_all(Path::new(&path).parent().unwrap()).unwrap();
-                match File::create(path.clone()) {
+                fs::create_dir_all(Path::new(&path).parent().unwrap()).await.unwrap();
+                match File::create(path.clone()).await {
                     Ok(mut file) => {
-                        match file.write_all(&buffer) {
+                        match file.write_all(&buffer).await {
                             Ok(_) => {
                                 println!("Saved: {path}");
                                 return Ok("Saved");
@@ -69,9 +70,9 @@ async fn main() {
         if req.auth == auth2 {
             let path = Path::new(&req.path);
             if path.is_file() {
-                let mut file = File::open(path).unwrap();
+                let mut file = File::open(path).await.unwrap();
                 let mut buffer = Vec::<u8>::new();
-                file.read_to_end(&mut buffer).unwrap();
+                file.read_to_end(&mut buffer).await.unwrap();
                 println!("Downloaded: {0}", req.path);
                 return buffer.into_response();
             } else {
