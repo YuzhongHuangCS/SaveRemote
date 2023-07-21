@@ -39,9 +39,12 @@ export function activate(context: vscode.ExtensionContext) {
 		let relativePath = remotePath.substring(config.remotePrefix.length);
 		let localPath = config.localPrefix + relativePath.split(path.posix.sep).join(path.sep);
 		if (!overwrite) {
-			let stats = await fs.promises.stat(localPath);
-			if (stats.isFile()) {
-				return;
+			try {
+				let stats = await fs.promises.stat(localPath);
+				if (stats.isFile()) {
+					return;
+				}
+			} catch (e) {
 			}
 		}
 
